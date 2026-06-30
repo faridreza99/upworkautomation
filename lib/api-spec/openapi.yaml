@@ -1,0 +1,967 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Upwork AI Automation API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: jobs
+    description: Job monitoring and management
+  - name: proposals
+    description: AI proposal generation and management
+  - name: settings
+    description: User settings and configuration
+  - name: notifications
+    description: Notification management
+  - name: stats
+    description: Dashboard analytics and stats
+  - name: ai
+    description: AI analysis and generation
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /jobs:
+    get:
+      operationId: listJobs
+      tags: [jobs]
+      summary: List all monitored jobs
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [new, analyzing, approved, skipped, applied, rejected]
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Job"
+    post:
+      operationId: createJob
+      tags: [jobs]
+      summary: Add a job from Chrome extension
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+
+  /jobs/{id}:
+    get:
+      operationId: getJob
+      tags: [jobs]
+      summary: Get a single job
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateJob
+      tags: [jobs]
+      summary: Update job status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+    delete:
+      operationId: deleteJob
+      tags: [jobs]
+      summary: Delete a job
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /jobs/{id}/analyze:
+    post:
+      operationId: analyzeJob
+      tags: [ai]
+      summary: Run AI analysis on a job
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: AI analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobAnalysis"
+
+  /jobs/{id}/proposal:
+    post:
+      operationId: generateProposal
+      tags: [ai]
+      summary: Generate an AI proposal for a job
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposalGenInput"
+      responses:
+        "200":
+          description: Generated proposal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+
+  /proposals:
+    get:
+      operationId: listProposals
+      tags: [proposals]
+      summary: List all proposals
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [draft, approved, sent, rejected]
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of proposals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Proposal"
+
+  /proposals/{id}:
+    get:
+      operationId: getProposal
+      tags: [proposals]
+      summary: Get a single proposal
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Proposal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateProposal
+      tags: [proposals]
+      summary: Update a proposal
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposalUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+    delete:
+      operationId: deleteProposal
+      tags: [proposals]
+      summary: Delete a proposal
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /proposals/{id}/approve:
+    post:
+      operationId: approveProposal
+      tags: [proposals]
+      summary: Approve a proposal for sending
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Approved proposal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get user settings
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+    patch:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update user settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications
+      parameters:
+        - in: query
+          name: unreadOnly
+          schema:
+            type: boolean
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a notification as read
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /scanner/status:
+    get:
+      operationId: getScannerStatus
+      tags: [ai]
+      summary: Get RSS scanner status
+      responses:
+        "200":
+          description: Scanner status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScannerStatus"
+
+  /scanner/trigger:
+    post:
+      operationId: triggerScanner
+      tags: [ai]
+      summary: Manually trigger a scanner run
+      responses:
+        "200":
+          description: Triggered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "409":
+          description: Already running
+
+  /stats/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [stats]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /stats/jobs:
+    get:
+      operationId: getJobStats
+      tags: [stats]
+      summary: Get job analytics breakdown
+      responses:
+        "200":
+          description: Job stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobStats"
+
+  /stats/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [stats]
+      summary: Get recent activity feed
+      responses:
+        "200":
+          description: Activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /events:
+    post:
+      operationId: createEvent
+      tags: [events]
+      summary: Receive a buyer/job event from the Chrome extension
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExtensionEvent"
+      responses:
+        "201":
+          description: Event accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  notification:
+                    $ref: "#/components/schemas/Notification"
+
+components:
+  schemas:
+    ExtensionEvent:
+      type: object
+      required: [type, title]
+      properties:
+        type:
+          type: string
+          enum: [message_received, interview_invite, contract_offer, proposal_reply, info]
+        title:
+          type: string
+        body:
+          type: string
+        senderName:
+          type: string
+        url:
+          type: string
+        timestamp:
+          type: string
+
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    Job:
+      type: object
+      required: [id, title, description, budgetType, status, createdAt]
+      properties:
+        id:
+          type: integer
+        upworkJobId:
+          type: ["string", "null"]
+        title:
+          type: string
+        description:
+          type: string
+        budgetType:
+          type: string
+          enum: [hourly, fixed]
+        budgetMin:
+          type: ["number", "null"]
+        budgetMax:
+          type: ["number", "null"]
+        clientCountry:
+          type: ["string", "null"]
+        clientHireRate:
+          type: ["number", "null"]
+        clientTotalSpent:
+          type: ["number", "null"]
+        paymentVerified:
+          type: ["boolean", "null"]
+        proposalCount:
+          type: ["integer", "null"]
+        skills:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [new, analyzing, approved, skipped, applied, rejected]
+        applyScore:
+          type: ["number", "null"]
+        riskScore:
+          type: ["number", "null"]
+        winProbability:
+          type: ["number", "null"]
+        aiRecommendation:
+          type: ["string", "null"]
+          enum: [apply, skip, review, null]
+        aiReasoning:
+          type: ["string", "null"]
+        jobUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    JobInput:
+      type: object
+      required: [title, budgetType]
+      properties:
+        upworkJobId:
+          type: string
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        budgetType:
+          type: string
+          enum: [hourly, fixed]
+        budgetMin:
+          type: ["number", "null"]
+        budgetMax:
+          type: ["number", "null"]
+        clientCountry:
+          type: ["string", "null"]
+        clientHireRate:
+          type: ["number", "null"]
+        clientTotalSpent:
+          type: ["number", "null"]
+        paymentVerified:
+          type: ["boolean", "null"]
+        proposalCount:
+          type: ["integer", "null"]
+        skills:
+          type: array
+          items:
+            type: string
+        jobUrl:
+          type: ["string", "null"]
+
+    JobUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [new, analyzing, approved, skipped, applied, rejected]
+        applyScore:
+          type: number
+        riskScore:
+          type: number
+        winProbability:
+          type: number
+        aiRecommendation:
+          type: string
+          enum: [apply, skip, review]
+        aiReasoning:
+          type: string
+
+    JobAnalysis:
+      type: object
+      required: [jobId, applyScore, riskScore, winProbability, recommendation, reasoning]
+      properties:
+        jobId:
+          type: integer
+        applyScore:
+          type: number
+        riskScore:
+          type: number
+        winProbability:
+          type: number
+        recommendation:
+          type: string
+          enum: [apply, skip, review]
+        reasoning:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        concerns:
+          type: array
+          items:
+            type: string
+
+    Proposal:
+      type: object
+      required: [id, jobId, content, status, createdAt]
+      properties:
+        id:
+          type: integer
+        jobId:
+          type: integer
+        jobTitle:
+          type: ["string", "null"]
+        content:
+          type: string
+        coverLetter:
+          type: ["string", "null"]
+        bidAmount:
+          type: ["number", "null"]
+        estimatedDuration:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [draft, approved, sent, rejected]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    ProposalGenInput:
+      type: object
+      properties:
+        bidAmount:
+          type: number
+        tone:
+          type: string
+          enum: [professional, friendly, confident]
+        includePortfolio:
+          type: boolean
+
+    ProposalUpdate:
+      type: object
+      properties:
+        content:
+          type: string
+        coverLetter:
+          type: string
+        bidAmount:
+          type: number
+        estimatedDuration:
+          type: string
+        status:
+          type: string
+          enum: [draft, approved, sent, rejected]
+
+    Settings:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: integer
+        minHourlyRate:
+          type: ["number", "null"]
+        minFixedBudget:
+          type: ["number", "null"]
+        paymentVerifiedOnly:
+          type: boolean
+        preferredCountries:
+          type: array
+          items:
+            type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        blacklistedClients:
+          type: array
+          items:
+            type: string
+        autoApplyEnabled:
+          type: boolean
+        autoReplyEnabled:
+          type: boolean
+        minAiScore:
+          type: ["number", "null"]
+        userSkills:
+          type: array
+          items:
+            type: string
+        portfolioDescription:
+          type: ["string", "null"]
+        whatsappEnabled:
+          type: boolean
+        whatsappNumber:
+          type: ["string", "null"]
+        notifyOnHighScore:
+          type: boolean
+        notifyOnMessage:
+          type: boolean
+        notifyOnInterview:
+          type: boolean
+        notifyOnContract:
+          type: boolean
+        telegramEnabled:
+          type: boolean
+        telegramBotToken:
+          type: ["string", "null"]
+        telegramChatId:
+          type: ["string", "null"]
+        scanEnabled:
+          type: boolean
+        scanIntervalMinutes:
+          type: integer
+        priorHireRequired:
+          type: boolean
+        maxApplicants:
+          type: ["integer", "null"]
+        maxJobAgeDays:
+          type: ["integer", "null"]
+        blockedCountries:
+          type: array
+          items:
+            type: string
+        autoProposalEnabled:
+          type: boolean
+        manualApprovalMode:
+          type: boolean
+        updatedAt:
+          type: string
+
+    SettingsUpdate:
+      type: object
+      properties:
+        minHourlyRate:
+          type: number
+        minFixedBudget:
+          type: number
+        paymentVerifiedOnly:
+          type: boolean
+        preferredCountries:
+          type: array
+          items:
+            type: string
+        keywords:
+          type: array
+          items:
+            type: string
+        blacklistedClients:
+          type: array
+          items:
+            type: string
+        autoApplyEnabled:
+          type: boolean
+        autoReplyEnabled:
+          type: boolean
+        minAiScore:
+          type: number
+        userSkills:
+          type: array
+          items:
+            type: string
+        portfolioDescription:
+          type: string
+        whatsappEnabled:
+          type: boolean
+        whatsappNumber:
+          type: string
+        notifyOnHighScore:
+          type: boolean
+        notifyOnMessage:
+          type: boolean
+        notifyOnInterview:
+          type: boolean
+        notifyOnContract:
+          type: boolean
+        telegramEnabled:
+          type: boolean
+        telegramBotToken:
+          type: string
+        telegramChatId:
+          type: string
+        scanEnabled:
+          type: boolean
+        scanIntervalMinutes:
+          type: integer
+        priorHireRequired:
+          type: boolean
+        maxApplicants:
+          type: integer
+        maxJobAgeDays:
+          type: integer
+        blockedCountries:
+          type: array
+          items:
+            type: string
+        autoProposalEnabled:
+          type: boolean
+        manualApprovalMode:
+          type: boolean
+
+    ScannerStatus:
+      type: object
+      required: [enabled, running, intervalMinutes, totalJobsImported]
+      properties:
+        enabled:
+          type: boolean
+        running:
+          type: boolean
+        intervalMinutes:
+          type: integer
+        lastRunAt:
+          type: ["string", "null"]
+        lastRunJobsFound:
+          type: integer
+        lastRunNewJobs:
+          type: integer
+        lastRunError:
+          type: ["string", "null"]
+        nextRunAt:
+          type: ["string", "null"]
+        totalJobsImported:
+          type: integer
+
+    Notification:
+      type: object
+      required: [id, type, message, read, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [high_score_job, message_received, interview_invite, proposal_viewed, contract_offer, info]
+        message:
+          type: string
+        jobId:
+          type: ["integer", "null"]
+        read:
+          type: boolean
+        createdAt:
+          type: string
+
+    DashboardStats:
+      type: object
+      required: [totalJobs, appliedJobs, successRate, avgApplyScore, pendingApproval, todayJobs]
+      properties:
+        totalJobs:
+          type: integer
+        appliedJobs:
+          type: integer
+        successRate:
+          type: number
+        avgApplyScore:
+          type: number
+        pendingApproval:
+          type: integer
+        todayJobs:
+          type: integer
+        unreadNotifications:
+          type: integer
+
+    JobStats:
+      type: object
+      required: [byStatus, byBudgetType, avgScores]
+      properties:
+        byStatus:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatusCount"
+        byBudgetType:
+          type: array
+          items:
+            $ref: "#/components/schemas/BudgetTypeCount"
+        avgScores:
+          $ref: "#/components/schemas/AvgScores"
+        scoreDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScoreBucket"
+
+    StatusCount:
+      type: object
+      required: [status, count]
+      properties:
+        status:
+          type: string
+        count:
+          type: integer
+
+    BudgetTypeCount:
+      type: object
+      required: [budgetType, count]
+      properties:
+        budgetType:
+          type: string
+        count:
+          type: integer
+
+    AvgScores:
+      type: object
+      required: [applyScore, riskScore, winProbability]
+      properties:
+        applyScore:
+          type: number
+        riskScore:
+          type: number
+        winProbability:
+          type: number
+
+    ScoreBucket:
+      type: object
+      required: [range, count]
+      properties:
+        range:
+          type: string
+        count:
+          type: integer
+
+    ActivityItem:
+      type: object
+      required: [id, type, message, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        message:
+          type: string
+        jobId:
+          type: ["integer", "null"]
+        jobTitle:
+          type: ["string", "null"]
+        score:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+
+    SuccessResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean

@@ -1,0 +1,20 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "ekIHjzjvTACvAhFde3_zq"
+uri = "file://upworkAI-extension.zip"
+type = "unspecified"
+title = "UpworkAI Extension — Pipeline Fixed (All 7 Steps Logged)"
+
+[[outputs]]
+id = "6aooke9eyPE7p9t_3HDvV"
+uri = "file://upworkai-extension.zip"
+type = "unspecified"
+title = "UpworkAI Chrome Extension (live job detection)"
+
+[[outputs]]
+id = "Hgz53U4LiSHyW5ykiRQiq"
+uri = "file://upwork-ai-extension.zip"
+type = "unspecified"
+title = "UpworkAI Chrome Extension v3.2 — Safe Event-Driven Architecture"

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>UpworkAI</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { width: 360px; font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; font-size: 13px; }
+
+    /* Header */
+    .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 14px 16px; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 10px; }
+    .logo { width: 30px; height: 30px; background: linear-gradient(135deg, #6366f1, #3b82f6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: white; flex-shrink: 0; }
+    .header-text h1 { font-size: 14px; font-weight: 600; color: #f1f5f9; }
+    .header-text p { font-size: 10px; color: #64748b; margin-top: 1px; }
+
+    /* Status bar */
+    .status-bar { display: flex; align-items: center; gap: 6px; padding: 7px 16px; background: #141824; border-bottom: 1px solid #1e293b; font-size: 11px; color: #94a3b8; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: pulse 2s infinite; flex-shrink: 0; }
+    .dot.offline { background: #ef4444; animation: none; }
+    .dot.warn { background: #f59e0b; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* Tabs */
+    .tabs { display: flex; border-bottom: 1px solid #1e293b; background: #0f1117; }
+    .tab-btn { flex: 1; padding: 9px 4px; background: none; border: none; color: #64748b; font-size: 11px; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; }
+    .tab-btn.active { color: #6366f1; border-bottom-color: #6366f1; }
+    .tab-btn:hover:not(.active) { color: #94a3b8; }
+
+    /* Pages */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #1e293b; }
+    .stat { background: #0f1117; padding: 10px 12px; }
+    .stat-label { font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: .05em; }
+    .stat-value { font-size: 20px; font-weight: 700; color: #f1f5f9; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .stat-value.blue { color: #6366f1; }
+    .stat-value.green { color: #22c55e; }
+    .stat-value.orange { color: #f59e0b; }
+
+    /* Sections */
+    .section { padding: 12px 16px; border-bottom: 1px solid #1e293b; }
+    .section-title { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; font-weight: 600; }
+
+    /* Form */
+    label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+    input[type="text"], input[type="url"] { width: 100%; background: #1a2030; border: 1px solid #2d3a50; border-radius: 6px; padding: 7px 10px; color: #e2e8f0; font-size: 12px; outline: none; transition: border-color .15s; }
+    input:focus { border-color: #6366f1; }
+
+    .form-row { margin-bottom: 10px; }
+    .form-row:last-child { margin-bottom: 0; }
+
+    /* Toggle */
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
+    .toggle-label { font-size: 12px; color: #cbd5e1; }
+    .toggle-sub { font-size: 10px; color: #64748b; }
+    .switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; inset: 0; background: #2d3a50; border-radius: 20px; cursor: pointer; transition: background .2s; }
+    .slider::before { content: ""; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform .2s; }
+    input:checked + .slider { background: #6366f1; }
+    input:checked + .slider::before { transform: translateX(16px); }
+
+    /* Mode badges */
+    .badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+    .badge-sim { background: #f59e0b22; color: #f59e0b; border: 1px solid #f59e0b44; }
+    .badge-debug { background: #6366f122; color: #818cf8; border: 1px solid #6366f144; }
+    .mode-row { display: flex; gap: 6px; margin-top: 6px; min-height: 18px; }
+
+    /* Buttons */
+    .btn { display: block; width: 100%; padding: 9px; border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: opacity .15s; text-align: center; }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: #6366f1; color: white; }
+    .btn-outline { background: transparent; color: #94a3b8; border: 1px solid #2d3a50; margin-top: 6px; }
+    .btn-danger { background: #ef444422; color: #f87171; border: 1px solid #ef444444; margin-top: 6px; font-size: 11px; }
+    .footer { padding: 10px 16px; display: flex; flex-direction: column; gap: 6px; }
+
+    /* Debug log */
+    .log-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .log-count { font-size: 10px; color: #64748b; }
+    .log-clear { font-size: 10px; color: #6366f1; cursor: pointer; background: none; border: none; padding: 0; }
+    .log-list { background: #0a0d14; border: 1px solid #1e293b; border-radius: 6px; max-height: 200px; overflow-y: auto; font-size: 10px; font-family: 'Courier New', monospace; }
+    .log-entry { padding: 4px 8px; border-bottom: 1px solid #0f1117; display: flex; gap: 6px; }
+    .log-entry:last-child { border-bottom: none; }
+    .log-time { color: #334155; flex-shrink: 0; }
+    .log-msg { color: #94a3b8; word-break: break-all; }
+    .log-msg.sim { color: #f59e0b; }
+    .log-msg.error { color: #f87171; }
+    .log-empty { padding: 20px; text-align: center; color: #334155; }
+
+    /* DOM Diagnostic tool */
+    .diag-section { padding: 10px 16px; border-bottom: 1px solid #1e293b; }
+    .diag-section .section-title { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; font-weight: 600; }
+    .diag-row { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+    .diag-row input { flex: 1; background: #1a2030; border: 1px solid #2d3a50; border-radius: 6px; padding: 6px 8px; color: #e2e8f0; font-size: 11px; outline: none; }
+    .diag-row input:focus { border-color: #6366f1; }
+    .diag-btn { background: #6366f1; color: white; border: none; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+    .diag-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .diag-btn-sm { background: transparent; color: #6366f1; border: 1px solid #6366f144; border-radius: 5px; padding: 3px 8px; font-size: 10px; cursor: pointer; }
+    .diag-status { font-size: 10px; color: #64748b; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; min-height: 14px; }
+    .diag-status .running { color: #f59e0b; animation: blink 1s infinite; }
+    .diag-status .done { color: #22c55e; }
+    .diag-status .err { color: #f87171; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .diag-out { background: #0a0d14; border: 1px solid #1e293b; border-radius: 6px; max-height: 220px; overflow-y: auto; font-size: 9.5px; font-family: 'Courier New', monospace; padding: 6px 8px; color: #94a3b8; white-space: pre-wrap; word-break: break-all; display: none; }
+    .diag-out.show { display: block; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); background: #22c55e; color: white; padding: 6px 14px; border-radius: 20px; font-size: 11px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 999; white-space: nowrap; }
+    .toast.show { opacity: 1; }
+
+    /* Sim banner */
+    .sim-banner { background: #78350f; border-top: 3px solid #f59e0b; border-bottom: 3px solid #f59e0b; color: #fef3c7; font-size: 12px; font-weight: 600; padding: 10px 14px; text-align: center; display: none; letter-spacing: .02em; }
+    .sim-banner.show { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .sim-banner button { background: #f59e0b; border: none; color: #000; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">U</div>
+    <div class="header-text">
+      <h1>UpworkAI Monitor</h1>
+      <p>AI-powered job automation</p>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusText">Checking…</span>
+  </div>
+
+  <div class="sim-banner" id="simBanner">
+    <span>⚠️ SIMULATION MODE — jobs detected but NOT sent to dashboard</span>
+    <button id="disableSimBtn">Disable &amp; Submit Real Jobs</button>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="status">Status</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
+    <button class="tab-btn" data-tab="debug">Debug</button>
+  </div>
+
+  <!-- ── Status tab ── -->
+  <div id="tab-status" class="page active">
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-label">Detected</div><div class="stat-value blue" id="sDetected">—</div></div>
+      <div class="stat"><div class="stat-label">Submitted</div><div class="stat-value green" id="sSubmitted">—</div></div>
+      <div class="stat"><div class="stat-label">Queued</div><div class="stat-value orange" id="sQueued">—</div></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-label">Messages</div><div class="stat-value" id="sMessages">—</div></div>
+      <div class="stat"><div class="stat-label">Failed</div><div class="stat-value" id="sFailed">—</div></div>
+      <div class="stat"><div class="stat-label">Queue</div><div class="stat-value" id="sQueueLen">—</div></div>
+    </div>
+    <div class="section">
+      <div class="mode-row" id="modeRow"></div>
+    </div>
+    <div class="footer">
+      <button class="btn btn-primary" id="openDashboard">Open Dashboard</button>
+    </div>
+  </div>
+
+  <!-- ── Settings tab ── -->
+  <div id="tab-settings" class="page">
+    <div class="section">
+      <div class="section-title">Connection</div>
+      <div class="form-row">
+        <label>Dashboard URL</label>
+        <input type="url" id="dashboardUrl" placeholder="https://your-app.replit.app" />
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Monitoring</div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Enable monitoring</div><div class="toggle-sub">Detect jobs on Upwork pages</div></div>
+        <label class="switch"><input type="checkbox" id="monitorEnabled" checked><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Simulation mode</div><div class="toggle-sub">Detect jobs, never submit</div></div>
+        <label class="switch"><input type="checkbox" id="simMode"><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <div><div class="toggle-label">Debug mode</div><div class="toggle-sub">Log all activity to Debug tab</div></div>
+        <label class="switch"><input type="checkbox" id="debugMode"><span class="slider"></span></label>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn btn-primary" id="saveBtn">Save Settings</button>
+      <button class="btn btn-outline" id="testConnection">Test Connection</button>
+    </div>
+  </div>
+
+  <!-- ── Debug tab ── -->
+  <div id="tab-debug" class="page">
+    <div class="section">
+      <div class="log-toolbar">
+        <span class="log-count" id="logCount">0 entries</span>
+        <button class="log-clear" id="clearLogs">Clear</button>
+      </div>
+      <div class="log-list" id="logList">
+        <div class="log-empty">No logs yet. Enable Debug Mode in Settings.</div>
+      </div>
+    </div>
+    <div class="footer">
+      <button class="btn btn-outline" id="refreshLogs">Refresh Logs</button>
+    </div>
+
+    <!-- ── DOM Diagnostic tool ── -->
+    <div class="diag-section">
+      <div class="section-title">DOM Diagnostic</div>
+      <div class="diag-row">
+        <input type="url" id="diagUrl" placeholder="https://www.upwork.com/jobs/…" />
+        <button class="diag-btn" id="diagRunBtn">Run</button>
+      </div>
+      <div class="diag-status" id="diagStatus"></div>
+      <div class="diag-out" id="diagOut"></div>
+      <div style="display:flex;gap:6px;margin-top:6px;">
+        <button class="diag-btn-sm" id="diagCopyBtn" style="display:none">Copy to clipboard</button>
+        <button class="diag-btn-sm" id="diagRefreshBtn" style="display:none">Refresh result</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="popup.js"></script>
+</body>
+</html>
